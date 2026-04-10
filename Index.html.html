@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAN Card NSDL Uploader</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body { 
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+  margin:0; padding:0; background-color:#f4f6f8; color:#333; 
+}
+header { 
+  background: linear-gradient(90deg, #4A90E2, #2874f0); 
+  color:#fff; padding:25px 15px; text-align:center; font-size:24px; font-weight:700; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2); letter-spacing:1px;
+}
+footer { 
+  background: #2874f0; color:#fff; text-align:center; padding:20px 10px; font-size:14px; 
+  box-shadow: 0 -4px 6px rgba(0,0,0,0.2);
+}
+h2 { 
+  color:#1a73e8; text-align:center; margin:25px 0; font-weight:600; 
+}
+h3 { 
+  color:#0d47a1; margin-bottom:12px; font-weight:600; 
+}
+.upload-section { 
+  background:#fff; padding:25px 30px; margin:25px auto; border-radius:16px; 
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15); max-width:850px; transition: transform 0.3s ease, box-shadow 0.3s ease; 
+  border-top: 5px solid #2874f0;
+}
+.upload-section:hover { 
+  transform: translateY(-4px); 
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25); 
+}
+input[type="file"] { 
+  display:block; margin-bottom:15px; 
+}
+.controls { 
+  display:flex; flex-wrap:wrap; align-items:center; margin-bottom:12px; gap:10px; 
+}
+.controls label { 
+  font-weight:500; 
+}
+input[type="range"] { 
+  cursor:pointer; 
+}
+canvas { 
+  border:1px solid #ccc; display:block; margin:10px 0; max-width:100%; border-radius:10px; 
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1); cursor: grab; background:#fefefe; 
+}
+canvas:active { cursor: grabbing; }
+button { 
+  background: #2874f0; color:#fff; border:none; padding:10px 22px; margin-top:12px; 
+  border-radius:10px; cursor:pointer; font-size:15px; font-weight:500; transition:0.3s; 
+}
+button:hover { 
+  background: #0d47a1; 
+}
+.remove-btn { 
+  background:#f44336; margin-right:10px; 
+}
+.remove-btn:hover { 
+  background:#c62828; 
+}
+.download-btn {
+  display: inline-block;
+  background: #2874f0;
+  color: #fff;
+  padding: 10px 22px;
+  margin-top: 12px;
+  margin-left: 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+.download-btn:hover {
+  background: #0d47a1;
+}
+</style>
+</head>
+<body>
+<header>PAN Card NSDL Uploader</header>
+<h2>Upload and Process Documents</h2>
+
+<!-- Photo Upload -->
+<div class="upload-section">
+  <h3>Upload Photo (2.5cm x 3.5cm, 200 DPI, < 50KB)</h3>
+  <input type="file" id="photoInput" accept="image/*">
+  <div class="controls">
+    <label>Zoom:</label><input type="range" id="photoZoom" min="0.1" max="3" step="0.1" value="1">
+    <label>Brightness:</label><input type="range" id="photoBrightness" min="0.5" max="2" step="0.1" value="1">
+    <label>Contrast:</label><input type="range" id="photoContrast" min="0.5" max="2" step="0.1" value="1">
+  </div>
+  <canvas id="photoCanvas"></canvas>
+  <button class="remove-btn" onclick="removeImage('photo')">Remove Photo</button>
+  <a id="downloadPhoto" class="download-btn" download="photo.jpg">Download Photo</a>
+</div>
+
+<!-- Signature Upload -->
+<div class="upload-section">
+  <h3>Upload Signature (4.5cm x 2cm, 200 DPI, < 50KB)</h3>
+  <input type="file" id="signInput" accept="image/*">
+  <div class="controls">
+    <label>Zoom:</label><input type="range" id="signZoom" min="0.1" max="3" step="0.1" value="1">
+    <label>Brightness:</label><input type="range" id="signBrightness" min="0.5" max="2" step="0.1" value="1">
+    <label>Contrast:</label><input type="range" id="signContrast" min="0.5" max="2" step="0.1" value="1">
+  </div>
+  <canvas id="signCanvas"></canvas>
+  <button class="remove-btn" onclick="removeImage('sign')">Remove Signature</button>
+  <a id="downloadSign" class="download-btn" download="signature.jpg">Download Signature</a>
+</div>
+
+<!-- Document Upload -->
+<div class="upload-section">
+  <h3>Upload Document (Multiple Images → PDF, < 300KB per image)</h3>
+  <input type="file" id="docInput" accept="image/*" multiple>
+  <div class="controls">
+    <label>Zoom:</label><input type="range" id="docZoom" min="0.1" max="3" step="0.1" value="1">
+    <label>Brightness:</label><input type="range" id="docBrightness" min="0.5" max="2" step="0.1" value="1">
+    <label>Contrast:</label><input type="range" id="docContrast" min="0.5" max="2" step="0.1" value="1">
+  </div>
+  <canvas id="docCanvas"></canvas>
+  <button class="remove-btn" onclick="removeImage('doc')">Remove Document</button>
+  <a id="downloadPDF" class="download-btn" download="document.pdf">Download PDF</a>
+</div>
+
+<footer>© 2025 NSDL PAN Card Uploader. All Rights Reserved.</footer>
+
+<script>
+function cmToPx(cm, dpi){ return Math.round((cm/2.54)*dpi); }
+
+function setupImageProcessor(type, widthCm, heightCm, dpi, maxSizeKB, isPDF=false){
+  let offsetX=0, offsetY=0, isDragging=false, startX, startY, currentImg=null;
+  const canvas=document.getElementById(type+'Canvas');
+  const ctx=canvas.getContext('2d');
+
+  function drawPreview(){
+    const zoom=parseFloat(document.getElementById(type+'Zoom').value);
+    const brightness=parseFloat(document.getElementById(type+'Brightness').value);
+    const contrast=parseFloat(document.getElementById(type+'Contrast').value);
+    const widthPx=isPDF?800:cmToPx(widthCm,dpi);
+    const heightPx=isPDF?600:cmToPx(heightCm,dpi);
+    canvas.width=widthPx; canvas.height=heightPx;
+
+    ctx.clearRect(0,0,widthPx,heightPx);
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,widthPx,heightPx); // White background
+    ctx.filter=`brightness(${brightness}) contrast(${contrast})`;
+
+    if(currentImg){
+      const aspectRatio=currentImg.width/currentImg.height;
+      let dw=canvas.width, dh=dw/aspectRatio;
+      if(dh>canvas.height){ dh=canvas.height; dw=dh*aspectRatio; }
+      const dx=(canvas.width-dw)/2 + offsetX;
+      const dy=(canvas.height-dh)/2 + offsetY;
+      ctx.drawImage(currentImg, dx, dy, dw*zoom, dh*zoom);
+    }
+  }
+
+  function processFile(){
+    const input=document.getElementById(type+'Input');
+    if(!input.files.length) return;
+    const file=input.files[0];
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        currentImg=img;
+        drawPreview();
+        if(isPDF){ generatePDF(); } else { generateDownload(); }
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function generateDownload(){
+    let quality=0.9;
+    function compress(){
+      canvas.toBlob(blob=>{
+        if(blob.size<=maxSizeKB*1024 || quality<0.1){
+          document.getElementById(type==='photo'?'downloadPhoto':'downloadSign').href=URL.createObjectURL(blob);
+        } else { quality-=0.05; compress(); }
+      },'image/jpeg',quality);
+    }
+    compress();
+  }
+
+  function generatePDF(){
+    const { jsPDF }=window.jspdf;
+    const pdf=new jsPDF();
+    let quality=0.9;
+    function tryAdd(){
+      const imgData=canvas.toDataURL('image/jpeg',quality);
+      const size=Math.round((imgData.length*3/4)/1024);
+      if(size<=maxSizeKB || quality<=0.2){
+        const pageWidth=pdf.internal.pageSize.getWidth();
+        const pageHeight=pdf.internal.pageSize.getHeight();
+        const aspectRatio=canvas.width/canvas.height;
+        let pdfWidth=pageWidth, pdfHeight=pdfWidth/aspectRatio;
+        if(pdfHeight>pageHeight){ pdfHeight=pageHeight; pdfWidth=pdfHeight*aspectRatio; }
+        pdf.addImage(imgData,'JPEG',(pageWidth-pdfWidth)/2,(pageHeight-pdfHeight)/2,pdfWidth,pdfHeight);
+        const pdfBlob=pdf.output('blob');
+        document.getElementById('downloadPDF').href=URL.createObjectURL(pdfBlob);
+      } else { quality-=0.1; tryAdd(); }
+    }
+    tryAdd();
+  }
+
+  canvas.addEventListener('mousedown',e=>{
+    isDragging=true;
+    startX=e.offsetX-offsetX;
+    startY=e.offsetY-offsetY;
+  });
+  canvas.addEventListener('mousemove',e=>{
+    if(isDragging && currentImg){
+      offsetX=e.offsetX-startX;
+      offsetY=e.offsetY-startY;
+      drawPreview();
+      if(isPDF){ generatePDF(); } else { generateDownload(); }
+    }
+  });
+  canvas.addEventListener('mouseup',()=>isDragging=false);
+  canvas.addEventListener('mouseleave',()=>isDragging=false);
+
+  document.getElementById(type+'Input').addEventListener('change',processFile);
+  ['Zoom','Brightness','Contrast'].forEach(ctrl=>{
+    document.getElementById(type+ctrl).addEventListener('input',()=>{
+      drawPreview();
+      if(isPDF){ generatePDF(); } else { generateDownload(); }
+    });
+  });
+}
+
+setupImageProcessor('photo',2.5,3.5,200,50,false);
+setupImageProcessor('sign',4.5,2,200,50,false);
+setupImageProcessor('doc',0,0,0,300,true);
+
+function removeImage(type){
+  const canvas=document.getElementById(type+'Canvas');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById(type+'Input').value='';
+  const download=document.getElementById(type==='doc'?'downloadPDF':type==='photo'?'downloadPhoto':'downloadSign');
+  download.href='#';
+}
+</script>
+</body>
+</html>
